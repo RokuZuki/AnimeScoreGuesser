@@ -1,0 +1,935 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Score Guesser</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- PeerJS -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes slideBg {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .bg-scroll {
+            animation: slideBg 60s linear infinite;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .animate-pop {
+            animation: pop 0.3s ease-out;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+            input[type=range]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                height: 28px;
+                width: 28px;
+                border-radius: 50%;
+                background: #fff;
+                cursor: pointer;
+                margin-top: -12px;
+                box-shadow: 0 0 15px rgba(99, 102, 241, 0.8);
+                border: 3px solid #6366f1;
+                transition: transform 0.1s;
+            }
+
+            input[type=range]::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 6px;
+                cursor: pointer;
+                background: #334155;
+                border-radius: 3px;
+            }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        const TEXTS = {
+            ja: {
+                title: "Anime Score Guesser",
+                createRoom: "部屋を作成",
+                joinRoom: "部屋に参加",
+                enterId: "ルームIDを入力",
+                join: "参加する",
+                waiting: "ホストの開始を待っています...",
+                players: "参加プレイヤー",
+                settings: "ゲーム設定",
+                rounds: "ラウンド数",
+                timeLimit: "制限時間 (秒)",
+                startGame: "ゲーム開始",
+                copy: "コピー",
+                copied: "完了!",
+                round: "Round",
+                guessScore: "スコアを予想せよ！",
+                submit: "決定",
+                waitingOthers: "他のプレイヤーを待機中...",
+                reveal: "結果発表",
+                actualScore: "正解スコア",
+                diff: "誤差",
+                points: "Pt",
+                nextRound: "次のラウンドへ",
+                finalResult: "最終結果",
+                winner: "優勝",
+                backToLobby: "ロビーに戻る",
+                synopsis: "あらすじ",
+                loadingAnime: "アニメデータを取得中...",
+                connectionError: "接続エラー",
+                fillName: "名前を入力してください",
+                hostLeft: "ホストが切断しました",
+                selectLang: "言語を選択",
+                host: "親",
+                you: "あなた",
+                episodes: "話数",
+                playerLeft: "が退出しました",
+                joining: "接続中...",
+                creating: "作成中...",
+                confirmLeave: "本当に退出しますか？",
+                leaveRoom: "退出する",
+                about: "このゲームについて",
+                aboutDesc: "ランダムに表示されるアニメの「MyAnimeListでのスコア」を予想して当てるパーティーゲームです。",
+                translationNotice: "アニメの情報は英語で取得されます。必要に応じてブラウザの翻訳機能をご利用ください。",
+                howToPlay: "遊び方",
+                step1: "1. 部屋を作る: ホストが部屋を作成し、IDを共有します。",
+                step2: "2. 参加する: 友達はIDを入力して入室します。",
+                step3: "3. 予想する: アニメの情報を見て、スコア(0.00〜10.00)を予想します。",
+                step4: "4. 結果発表: 正解に近いほど高得点！",
+                streamingTitle: "実況・配信・動画投稿について",
+                streamingDesc: "個人・法人を問わず、実況配信や動画投稿を自由に行っていただけます。事前連絡は不要です。収益化も問題ありません。ぜひ皆さんで楽しんでください！"
+            },
+            en: {
+                title: "Anime Score Guesser",
+                createRoom: "Create Room",
+                joinRoom: "Join Room",
+                enterId: "Enter Room ID",
+                join: "Join",
+                waiting: "Waiting for host...",
+                players: "Players",
+                settings: "Settings",
+                rounds: "Rounds",
+                timeLimit: "Time Limit (sec)",
+                startGame: "Start Game",
+                copy: "Copy",
+                copied: "Copied!",
+                round: "Round",
+                guessScore: "Guess the Score!",
+                submit: "Submit",
+                waitingOthers: "Waiting for others...",
+                reveal: "Result Reveal",
+                actualScore: "Actual Score",
+                diff: "Diff",
+                points: "Pts",
+                nextRound: "Next Round",
+                finalResult: "Final Results",
+                winner: "Winner",
+                backToLobby: "Back to Lobby",
+                synopsis: "Synopsis",
+                loadingAnime: "Loading Anime Data...",
+                connectionError: "Connection Error",
+                fillName: "Please enter your name",
+                hostLeft: "Host disconnected",
+                selectLang: "Select Language",
+                host: "HOST",
+                you: "YOU",
+                episodes: "Eps",
+                playerLeft: "left the room",
+                joining: "Joining...",
+                creating: "Creating...",
+                confirmLeave: "Confirm Leave?",
+                leaveRoom: "Leave Room",
+                about: "About this game",
+                aboutDesc: "A party game where you guess the 'MyAnimeList Score' of random anime!",
+                translationNotice: "Anime information is fetched in English. Please use your browser's translation feature if necessary.",
+                howToPlay: "How to Play",
+                step1: "1. Create: Host creates a room and shares the ID.",
+                step2: "2. Join: Friends join using the Room ID.",
+                step3: "3. Guess: Look at the anime info and guess the score (0.00-10.00).",
+                step4: "4. Reveal: Closer guesses get higher points!",
+                streamingTitle: "About Streaming & Video Posting",
+                streamingDesc: "Feel free to stream or post videos of this game, regardless of whether you are an individual or a corporation. No prior contact is required, and monetization is perfectly fine. Have fun!"
+            }
+        };
+
+        const LANG_OPTS = [
+            { code: 'ja', label: '🇯🇵 日本語' },
+            { code: 'en', label: '🇺🇸 English' }
+        ];
+
+        const PLAYER_COLORS = [
+            { bg: 'bg-rose-500', grad: 'from-rose-400 to-rose-600' },
+            { bg: 'bg-pink-500', grad: 'from-pink-400 to-pink-600' },
+            { bg: 'bg-fuchsia-500', grad: 'from-fuchsia-400 to-fuchsia-600' },
+            { bg: 'bg-purple-500', grad: 'from-purple-400 to-purple-600' },
+            { bg: 'bg-violet-500', grad: 'from-violet-400 to-violet-600' },
+            { bg: 'bg-indigo-500', grad: 'from-indigo-400 to-indigo-600' },
+            { bg: 'bg-blue-500', grad: 'from-blue-400 to-blue-600' },
+            { bg: 'bg-sky-500', grad: 'from-sky-400 to-sky-600' },
+            { bg: 'bg-cyan-500', grad: 'from-cyan-400 to-cyan-600' },
+            { bg: 'bg-teal-500', grad: 'from-teal-400 to-teal-600' },
+            { bg: 'bg-emerald-500', grad: 'from-emerald-400 to-emerald-600' },
+            { bg: 'bg-green-500', grad: 'from-green-400 to-green-600' },
+            { bg: 'bg-lime-500', grad: 'from-lime-400 to-lime-600' },
+            { bg: 'bg-amber-500', grad: 'from-amber-400 to-amber-600' },
+            { bg: 'bg-orange-500', grad: 'from-orange-400 to-orange-600' },
+            { bg: 'bg-red-500', grad: 'from-red-400 to-red-600' },
+        ];
+        const getRandomColor = () => PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
+
+        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+
+        // --- Helper Components ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const spanRef = useRef(null);
+            useEffect(() => {
+                if (spanRef.current && window.lucide) {
+                    spanRef.current.innerHTML = `<i data-lucide="${name}" width="${size}" height="${size}"></i>`;
+                    window.lucide.createIcons({ root: spanRef.current });
+                }
+            }, [name, size]);
+            return <span translate="no" ref={spanRef} className={`inline-flex items-center justify-center leading-none ${className}`}></span>;
+        };
+
+        const Button = ({ children, onClick, disabled, variant = "primary", className = "" }) => {
+            const baseStyle = "w-full py-3 px-4 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+            const variants = {
+                primary: "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/30",
+                secondary: "bg-slate-700 hover:bg-slate-600 text-white border border-slate-600",
+                danger: "bg-rose-600 hover:bg-rose-500 text-white",
+                ghost: "bg-transparent hover:bg-slate-800 text-slate-300"
+            };
+            return (
+                <button translate="no" onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
+                    {children}
+                </button>
+            );
+        };
+
+        const Slider = ({ value, onChange, disabled }) => (
+            <div translate="no" className="relative w-full h-16 flex items-center">
+                <input type="range" min="0" max="10" step="0.01" value={value} onChange={onChange} disabled={disabled} className="w-full z-20 opacity-0 cursor-pointer h-full absolute top-0 left-0" />
+                <div className="w-full h-4 bg-slate-800 rounded-full relative overflow-hidden border border-slate-700">
+                    <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-75" style={{ width: `${(value / 10) * 100}%` }}></div>
+                </div>
+                <div className="absolute h-10 w-16 bg-white rounded-lg shadow-xl z-10 pointer-events-none transition-all duration-75 flex items-center justify-center text-sm font-black text-indigo-900 border-2 border-indigo-500" style={{ left: `calc(${(value / 10) * 100}% - 32px)`, top: '-8px' }}>
+                    {parseFloat(value).toFixed(2)}
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-indigo-500"></div>
+                </div>
+            </div>
+        );
+
+        const LeaveButton = ({ onLeave, t }) => {
+            const [confirming, setConfirming] = useState(false);
+            const timeoutRef = useRef(null);
+            const handleClick = () => {
+                if (confirming) { onLeave(); } else { setConfirming(true); timeoutRef.current = setTimeout(() => setConfirming(false), 3000); }
+            };
+            useEffect(() => { return () => clearTimeout(timeoutRef.current); }, []);
+            return (
+                <button translate="no" onClick={handleClick}
+                    className={`fixed top-4 left-4 z-[100] px-3 py-2 md:px-4 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 ${confirming ? 'bg-rose-600 text-white animate-pulse' : 'bg-slate-800/80 backdrop-blur-md text-slate-400 hover:text-white border border-slate-700'}`}
+                >
+                    <Icon name="log-out" size={18} />
+                    <span className="text-xs md:text-sm">{confirming ? t.confirmLeave : t.leaveRoom}</span>
+                </button>
+            );
+        };
+
+        const AnimatedBackground = () => {
+            const [posters, setPosters] = useState([]);
+            useEffect(() => {
+                fetch('https://api.jikan.moe/v4/top/anime?limit=25&filter=bypopularity')
+                    .then(res => res.json())
+                    .then(data => { if(data?.data) setPosters([...data.data, ...data.data]); })
+                    .catch(err => console.warn(err));
+            }, []);
+            if (posters.length === 0) return <div className="fixed inset-0 bg-slate-900 -z-20"></div>;
+            return (
+                <div className="fixed inset-0 overflow-hidden -z-20 bg-slate-900" translate="no">
+                    <div className="absolute inset-0 bg-slate-900/85 z-10 backdrop-blur-[3px]"></div>
+                    <div className="flex gap-4 opacity-20 grayscale" style={{ width: '200%' }}>
+                        <div className="flex gap-4 bg-scroll py-4">
+                            {posters.map((anime, i) => (
+                                <img key={`${anime.mal_id}-${i}`} src={anime.images.jpg.image_url} className="w-32 md:w-48 rounded-lg shadow-lg object-cover aspect-[2/3]" alt=""/>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const TranslatedBlock = React.memo(({ text, className = "", tag: Tag = "span", lang = "en" }) => (
+            <Tag className={className} lang={lang} translate="yes" dangerouslySetInnerHTML={{ __html: escapeHTML(text) }} />
+        ));
+
+        const ProtectedDisplay = React.memo(({ text, className = "", tag: Tag = "span" }) => (
+            <Tag className={className} translate="no" dangerouslySetInnerHTML={{ __html: escapeHTML(text) }} />
+        ));
+
+        const AnimeInfoText = React.memo(({ animeData, t }) => (
+            <div className="flex flex-col gap-6">
+                <div className="space-y-3">
+                    <TranslatedBlock tag="h2" className="text-3xl md:text-5xl font-black leading-tight text-white drop-shadow-md" text={animeData.title} />
+                    {animeData.title_japanese && <h3 className="text-xl text-slate-400 font-bold" translate="no"><span>{animeData.title_japanese}</span></h3>}
+                </div>
+
+                {/* 拡張されたヒント情報バッジ */}
+                <div className="flex flex-wrap gap-2" translate="no">
+                    {animeData.type && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-indigo-300"><Icon name="tv" size={16}/> {animeData.type}</span>}
+
+                    {animeData.aired?.prop?.from?.year && (
+                        <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-emerald-300 capitalize">
+                            <Icon name="calendar" size={16}/>
+                            {animeData.season ? `${animeData.season} ` : ''}{animeData.aired.prop.from.year}
+                        </span>
+                    )}
+
+                    {animeData.episodes && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-amber-300"><Icon name="hash" size={16}/> {animeData.episodes} {t.episodes}</span>}
+
+                    {animeData.studios?.[0] && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-pink-300"><Icon name="film" size={16}/> {animeData.studios[0].name}</span>}
+
+                    {animeData.source && animeData.source !== "Unknown" && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-cyan-300 capitalize"><Icon name="book-open" size={16}/> {animeData.source.replace(/_/g, ' ')}</span>}
+
+                    {animeData.rating && animeData.rating !== "None" && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-rose-300" title={animeData.rating}><Icon name="shield" size={16}/> {animeData.rating.split(' - ')[0]}</span>}
+                </div>
+
+                {/* ジャンルだけでなく、テーマとターゲット層もまとめてタグ表示 */}
+                <div className="flex flex-wrap gap-1.5">
+                    {[...(animeData.genres || []), ...(animeData.themes || []), ...(animeData.demographics || [])].map((g, idx) =>
+                        <TranslatedBlock key={`${g.mal_id}-${idx}`} tag="span" className="bg-slate-700/50 text-slate-300 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider" text={g.name} />
+                    )}
+                </div>
+
+                <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700/50 shadow-inner overflow-y-auto max-h-48 md:max-h-[none]">
+                    <h4 translate="no" className="text-slate-400 font-black mb-3 flex items-center gap-2 uppercase tracking-widest text-xs border-b border-slate-700 pb-2"><Icon name="align-left" size={16}/> {t.synopsis}</h4>
+                    <TranslatedBlock tag="p" className="text-slate-200 leading-relaxed text-sm md:text-base" text={animeData.synopsis || "No synopsis available."} />
+                </div>
+            </div>
+        ));
+
+        const AnimeResultTitle = React.memo(({ title }) => (
+            <TranslatedBlock tag="h3" className="text-2xl font-bold mb-4" text={title} />
+        ));
+
+        // --- Main App Component ---
+        const App = () => {
+            // -- State Definitions --
+            const [lang, setLang] = useState('ja');
+            const [showLangModal, setShowLangModal] = useState(false);
+            const [gameState, setGameState] = useState('MENU');
+            const [myId, setMyId] = useState('');
+            const [hostId, setHostId] = useState('');
+            const [isHost, setIsHost] = useState(false);
+            const [myName, setMyName] = useState('');
+            const [players, setPlayers] = useState([]);
+            const [settings, setSettings] = useState({ rounds: 5, timeLimit: 30 });
+            const [currentRound, setCurrentRound] = useState(1);
+            const [animeData, setAnimeData] = useState(null);
+            const [timeLeft, setTimeLeft] = useState(0);
+            const [myGuess, setMyGuess] = useState(5.00);
+            const [isGuessSubmitted, setIsGuessSubmitted] = useState(false);
+            const [revealedScore, setRevealedScore] = useState(0);
+            const [isCopied, setIsCopied] = useState(false);
+            const [connectingMode, setConnectingMode] = useState('');
+            const [errorMessage, setErrorMessage] = useState('');
+            const [infoMessage, setInfoMessage] = useState('');
+
+            // -- Refs --
+            const peerRef = useRef(null);
+            const connsRef = useRef({});
+            const hostConnRef = useRef(null);
+            const timerRef = useRef(null);
+            const connectionTimeoutRef = useRef(null);
+            const confettiRef = useRef(null);
+            const stateRef = useRef({ isHost, gameState, players, settings, currentRound, animeData, timeLeft, lang });
+
+            const t = TEXTS[lang];
+
+            // -- Sync Refs --
+            useEffect(() => {
+                stateRef.current = { isHost, gameState, players, settings, currentRound, animeData, timeLeft, lang };
+            }, [isHost, gameState, players, settings, currentRound, animeData, timeLeft, lang]);
+
+            // -- Utilities --
+            const showError = (msg) => { if (!msg) return; setErrorMessage(msg); setTimeout(() => setErrorMessage(''), 4000); };
+            const showInfo = (msg) => { if (!msg) return; setInfoMessage(msg); setTimeout(() => setInfoMessage(''), 4000); };
+
+            const handleCopyText = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                } catch (err) { console.warn('Failed to copy', err); }
+                document.body.removeChild(textArea);
+            };
+
+            const cleanupConnection = () => {
+                if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+                if (timerRef.current) clearInterval(timerRef.current);
+                if (peerRef.current) { try { peerRef.current.destroy(); } catch(e) {} peerRef.current = null; }
+                connsRef.current = {}; hostConnRef.current = null;
+            };
+
+            const stopConfetti = () => {
+                if (confettiRef.current) {
+                    cancelAnimationFrame(confettiRef.current);
+                    confettiRef.current = null;
+                }
+                if (window.confetti) window.confetti.reset();
+            };
+
+            const fireConfetti = () => {
+                stopConfetti();
+                if (window.confetti) {
+                    const duration = 3000; const end = Date.now() + duration;
+                    const frame = () => {
+                        window.confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                        window.confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                        if (Date.now() < end) confettiRef.current = requestAnimationFrame(frame);
+                        else confettiRef.current = null;
+                    };
+                    frame();
+                }
+            };
+
+            const leaveRoom = () => {
+                stopConfetti();
+                setGameState('MENU'); setPlayers([]); setIsHost(false);
+                setMyId(''); setHostId(''); setCurrentRound(1);
+                setAnimeData(null); setIsCopied(false); setConnectingMode('');
+                setRevealedScore(0);
+                setTimeout(cleanupConnection, 50);
+            };
+
+            const returnToLobby = () => {
+                stopConfetti();
+                setGameState('LOBBY'); setCurrentRound(1); setPlayers(prev => prev.map(p => ({...p, score: 0})));
+                broadcastState({ gameState: 'LOBBY', currentRound: 1, players: players.map(p => ({...p, score: 0})) });
+            };
+
+            // -- Networking Logic --
+            const broadcastState = (overrideState = {}) => {
+                const s = stateRef.current;
+                if (!s.isHost) return;
+                const payload = {
+                    gameState: overrideState.gameState || s.gameState,
+                    players: overrideState.players || s.players,
+                    settings: overrideState.settings || s.settings,
+                    currentRound: overrideState.currentRound || s.currentRound,
+                    animeData: overrideState.animeData !== undefined ? overrideState.animeData : s.animeData,
+                    timeLeft: overrideState.timeLeft !== undefined ? overrideState.timeLeft : s.timeLeft,
+                };
+                Object.values(connsRef.current).forEach(c => { if (c && c.open) c.send({ type: 'UPDATE_STATE', payload }); });
+            };
+
+            const handleDataFromPeer = (data, peerId) => {
+                if (data.type === 'JOIN') {
+                    setPlayers(prev => {
+                        const newPlayers = prev.some(p => p.id === peerId) ? prev : [...prev, { id: peerId, name: data.payload.name, score: 0, currentGuess: null, color: getRandomColor() }];
+                        setTimeout(() => broadcastState({ players: newPlayers }), 50); return newPlayers;
+                    });
+                } else if (data.type === 'SUBMIT_GUESS') {
+                    setPlayers(prev => prev.map(p => p.id === peerId ? { ...p, currentGuess: parseFloat(data.payload.guess) } : p));
+                }
+            };
+
+            const handleDataFromHost = (data) => {
+                if (data.type === 'UPDATE_STATE') {
+                    const s = data.payload;
+                    const cur = stateRef.current;
+                    if (s.gameState === 'LOADING_ROUND' && cur.gameState !== 'LOADING_ROUND') {
+                        setIsGuessSubmitted(false); setMyGuess(5.00); setRevealedScore(0);
+                    }
+                    if (s.gameState) setGameState(s.gameState); if (s.players) setPlayers(s.players); if (s.settings) setSettings(s.settings);
+                    if (s.currentRound) setCurrentRound(s.currentRound); if (s.animeData !== undefined) setAnimeData(s.animeData);
+                    if (s.timeLeft !== undefined) setTimeLeft(s.timeLeft);
+                    if (s.gameState === 'GAME_OVER') fireConfetti();
+                    if (s.gameState === 'LOBBY') stopConfetti();
+                } else if (data.type === 'INFO') { showInfo(data.payload.message); }
+            };
+
+            const initPeer = (id = null, onOpenCallback = null) => {
+                const peer = new Peer(id);
+                peerRef.current = peer;
+                peer.on('open', (id) => { setMyId(id); if (onOpenCallback) onOpenCallback(id); });
+                peer.on('connection', (conn) => {
+                    conn.on('open', () => { connsRef.current[conn.peer] = conn; conn.on('data', (data) => handleDataFromPeer(data, conn.peer)); });
+                    conn.on('close', () => {
+                        const s = stateRef.current;
+                        const leftPlayer = s.players.find(p => p.id === conn.peer);
+                        if (leftPlayer) {
+                            const msg = `${leftPlayer.name} ${TEXTS[s.lang].playerLeft}`;
+                            showInfo(msg);
+                            Object.values(connsRef.current).forEach(c => { if (c && c.open && c.peer !== conn.peer) c.send({ type: 'INFO', payload: { message: msg } }); });
+                        }
+                        delete connsRef.current[conn.peer];
+                        const newPlayers = s.players.filter(p => p.id !== conn.peer);
+                        setPlayers(newPlayers); broadcastState({ players: newPlayers });
+                    });
+                });
+                peer.on('error', (err) => {
+                    setTimeout(() => {
+                        setConnectingMode('');
+                        let errMsg = t.connectionError;
+                        if (err && err.type === 'peer-unavailable') errMsg = (lang === 'ja' ? "ルームが見つかりません。" : "Room not found.");
+                        showError(errMsg); leaveRoom();
+                    }, 0);
+                });
+            };
+
+            const joinGame = () => {
+                if (!myName.trim()) { showError(t.fillName); return; }
+                if (!hostId.trim()) return;
+                setConnectingMode('join');
+                initPeer(null, (id) => {
+                    const conn = peerRef.current.connect(hostId.trim().toUpperCase());
+                    hostConnRef.current = conn;
+                    conn.on('open', () => {
+                        conn.send({ type: 'JOIN', payload: { name: myName } });
+                        connectionTimeoutRef.current = setTimeout(() => { showError("ホストからの応答がありません。"); leaveRoom(); }, 8000);
+                    });
+                    conn.on('data', (data) => {
+                        if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+                        setGameState(prev => { if (prev !== 'LOBBY') { setConnectingMode(''); return 'LOBBY'; } return prev; });
+                        handleDataFromHost(data);
+                    });
+                    conn.on('close', () => { setTimeout(() => { showError(TEXTS[stateRef.current.lang].hostLeft); leaveRoom(); }, 0); });
+                });
+            };
+
+            const createGame = () => {
+                if (!myName.trim()) { showError(t.fillName); return; }
+                setConnectingMode('create');
+                const newRoomId = Math.random().toString(36).substring(2, 7).toUpperCase();
+                initPeer(newRoomId, () => {
+                    setConnectingMode(''); setIsHost(true); setGameState('LOBBY');
+                    setPlayers([{ id: 'HOST', name: myName, score: 0, currentGuess: null, color: getRandomColor() }]);
+                });
+            };
+
+            // -- Game Actions --
+            const fetchAnime = async () => {
+                let retries = 0;
+                while (retries < 5) {
+                    try {
+                        const randomPage = Math.floor(Math.random() * 200) + 1;
+                        const res = await fetch(`https://api.jikan.moe/v4/anime?sfw=true&order_by=members&sort=desc&page=${randomPage}&_cb=${Date.now()}`);
+                        if (res.status === 429) { await new Promise(r => setTimeout(r, 1000)); retries++; continue; }
+                        const data = await res.json();
+                        const validAnimes = data?.data?.filter(anime => ['TV', 'Movie', 'OVA', 'ONA'].includes(anime.type) && anime.score && anime.synopsis && anime.images?.jpg?.large_image_url);
+                        if (validAnimes?.length > 0) return validAnimes[Math.floor(Math.random() * validAnimes.length)];
+                    } catch(e) { console.warn(e); }
+                    retries++; await new Promise(r => setTimeout(r, 1000));
+                }
+                return null;
+            };
+
+            const startRound = async () => {
+                setGameState('LOADING_ROUND'); broadcastState({ gameState: 'LOADING_ROUND' });
+                setPlayers(prev => prev.map(p => ({ ...p, currentGuess: null })));
+                broadcastState({ players: players.map(p => ({ ...p, currentGuess: null })) });
+                setIsGuessSubmitted(false); setMyGuess(5.00); setRevealedScore(0);
+                let anime = await fetchAnime();
+                if (!anime) { showError("アニメデータの取得に失敗しました。"); setGameState('LOBBY'); broadcastState({ gameState: 'LOBBY' }); return; }
+                setAnimeData(anime); setGameState('PLAYING'); setTimeLeft(settings.timeLimit);
+                broadcastState({ gameState: 'PLAYING', animeData: anime, timeLeft: settings.timeLimit });
+                if (timerRef.current) clearInterval(timerRef.current);
+                timerRef.current = setInterval(() => { setTimeLeft(prev => { if (prev <= 1) { clearInterval(timerRef.current); return 0; } return prev - 1; }); }, 1000);
+            };
+
+            const submitGuess = () => {
+                const val = parseFloat(myGuess); setIsGuessSubmitted(true);
+                if (isHost) setPlayers(prev => prev.map(p => p.id === 'HOST' ? { ...p, currentGuess: val } : p));
+                else hostConnRef.current.send({ type: 'SUBMIT_GUESS', payload: { guess: val } });
+            };
+
+            // -- Effects --
+            useEffect(() => {
+                if (!isHost || gameState !== 'PLAYING') return;
+                if (timeLeft === 0 || (players.length > 0 && players.every(p => p.currentGuess !== null))) {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                    const calculatedPlayers = players.map(p => {
+                        const diff = Math.abs(animeData.score - (p.currentGuess || 0));
+                        let roundPoints = Math.max(0, Math.round(1000 * Math.exp(-2.302 * diff)));
+                        return { ...p, score: p.score + roundPoints, lastDiff: diff.toFixed(2), lastPoints: roundPoints };
+                    });
+                    setPlayers(calculatedPlayers); setGameState('ROUND_RESULT');
+                    broadcastState({ gameState: 'ROUND_RESULT', players: calculatedPlayers });
+                }
+            }, [timeLeft, players, isHost, gameState]);
+
+            useEffect(() => {
+                if (gameState === 'ROUND_RESULT' && animeData) {
+                    const end = animeData.score; const startTime = performance.now();
+                    const animateScore = (currentTime) => {
+                        const progress = Math.min((currentTime - startTime) / 2000, 1);
+                        const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                        setRevealedScore(ease * end);
+                        if (progress < 1) requestAnimationFrame(animateScore);
+                    };
+                    requestAnimationFrame(animateScore);
+                }
+            }, [gameState, animeData]);
+
+            // --- Render Snippets ---
+            const renderLanguageModal = () => (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" translate="no">
+                    <div className="bg-slate-800 p-6 rounded-2xl w-full max-w-sm border border-slate-700 shadow-2xl">
+                        <h3 className="text-xl font-bold mb-4 text-center">{t.selectLang}</h3>
+                        <div className="space-y-3">
+                            {LANG_OPTS.map(opt => (
+                                <button key={opt.code} onClick={() => { setLang(opt.code); setShowLangModal(false); }}
+                                    className={`w-full p-4 rounded-xl font-bold text-left transition flex items-center justify-between ${lang === opt.code ? 'bg-indigo-600' : 'bg-slate-700 hover:bg-slate-600'}`}>
+                                    <span>{opt.label}</span> {lang === opt.code && <Icon name="check" size={20} />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderLobby = () => (
+                <div className="min-h-screen flex flex-col items-center p-4 pt-20 animate-fade-in bg-slate-900/30" translate="no">
+                    <div className="w-full max-w-4xl bg-slate-800/80 backdrop-blur-md rounded-3xl p-6 md:p-10 border border-slate-700 shadow-2xl">
+                        <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-slate-700 pb-6">
+                            <h2 className="text-2xl font-black flex items-center gap-2 tracking-wider"><Icon name="users" className="text-indigo-400" /> {t.players}</h2>
+                            <div className="flex items-center gap-3 bg-slate-900 p-3 rounded-xl border border-slate-700 shadow-inner">
+                                <span className="text-slate-400 text-sm font-bold">ROOM ID:</span> <span className="font-mono text-xl font-bold tracking-widest text-white select-all">{isHost ? (myId || "...") : hostId}</span>
+                                <button onClick={() => handleCopyText(isHost ? myId : hostId)} className={`p-2 rounded-lg transition active:scale-90 flex items-center gap-1 relative ${isCopied ? 'bg-green-500/20 text-green-400' : 'hover:bg-slate-700 text-indigo-400'}`}>
+                                    {isCopied ? <Icon name="check" size={20} /> : <Icon name="copy" size={20} />}
+                                </button>
+                            </div>
+                        </header>
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                                {players.map(p => (
+                                    <div key={p.id} className={`flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border-2 transform transition hover:scale-[1.02] ${p.id === 'HOST' || (p.id === myId || (isHost && p.id === 'HOST')) ? 'border-indigo-500' : 'border-slate-700/50'}`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xl bg-gradient-to-br text-white ${p.color?.grad || 'from-slate-400 to-slate-600'}`}>{p.name.charAt(0).toUpperCase()}</div>
+                                        <div className="flex-1"><div className="font-bold text-lg">{p.name}</div><div className="text-xs font-bold text-slate-400 flex items-center gap-2 mt-1">{p.id === 'HOST' && <span className="text-yellow-400 uppercase">{t.host}</span>}{ (p.id === myId || (isHost && p.id === 'HOST')) && <span className="bg-indigo-600 text-white px-2 py-0.5 rounded uppercase tracking-widest animate-pulse">{t.you}</span>}</div></div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-700 flex flex-col justify-center shadow-inner">
+                                {isHost ? (
+                                    <div className="space-y-8">
+                                        <h3 className="text-xl font-black text-center mb-2 uppercase tracking-widest text-slate-300">{t.settings}</h3>
+                                        <div><label className="flex justify-between text-sm font-bold text-slate-400 mb-3 uppercase">{t.rounds} <span className="text-white text-lg bg-slate-800 px-3 py-1 rounded-lg">{settings.rounds}</span></label><input type="range" min="1" max="10" value={settings.rounds} onChange={e => { const newSettings = {...settings, rounds: parseInt(e.target.value)}; setSettings(newSettings); broadcastState({ settings: newSettings }); }} className="w-full accent-indigo-500" /></div>
+                                        <div><label className="flex justify-between text-sm font-bold text-slate-400 mb-3 uppercase">{t.timeLimit} <span className="text-white text-lg bg-slate-800 px-3 py-1 rounded-lg">{settings.timeLimit}s</span></label><input type="range" min="10" max="60" step="5" value={settings.timeLimit} onChange={e => { const newSettings = {...settings, timeLimit: parseInt(e.target.value)}; setSettings(newSettings); broadcastState({ settings: newSettings }); }} className="w-full accent-indigo-500" /></div>
+                                        <Button onClick={startRound} className="mt-4 text-xl py-5">{t.startGame}</Button>
+                                    </div>
+                                ) : (
+                                    <div className="text-center h-full flex flex-col items-center justify-center space-y-8">
+                                        <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-700 border-t-indigo-500"></div><p className="text-lg font-bold tracking-widest uppercase text-slate-300">{t.waiting}</p>
+                                        <div className="w-full max-w-sm bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 space-y-4">
+                                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest text-center border-b border-slate-700/50 pb-2 mb-4">{t.settings}</h4>
+                                            <div className="flex justify-between items-center"><span className="text-slate-400 text-sm">{t.rounds}</span><span className="text-white bg-slate-800 px-3 py-1 rounded-lg font-bold">{settings.rounds}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-slate-400 text-sm">{t.timeLimit}</span><span className="text-white bg-slate-800 px-3 py-1 rounded-lg font-bold">{settings.timeLimit}s</span></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // -- Return JSX --
+            return (
+                <div className="min-h-screen font-sans selection:bg-indigo-500/30 relative">
+                    <AnimatedBackground />
+
+                    <div translate="no">
+                        {errorMessage && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm bg-rose-600/95 backdrop-blur-md border border-rose-400 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-fade-in cursor-pointer" onClick={() => setErrorMessage('')}><Icon name="alert-triangle" size={20} /><span className="font-bold text-sm leading-tight flex-1">{errorMessage}</span></div>}
+                        {infoMessage && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[190] w-[90%] max-w-sm bg-slate-800/95 backdrop-blur-md border border-slate-600 text-slate-200 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-fade-in cursor-pointer" onClick={() => setInfoMessage('')}><Icon name="info" size={20} /><span className="font-bold text-sm leading-tight flex-1">{infoMessage}</span></div>}
+                        {gameState !== 'MENU' && <LeaveButton onLeave={leaveRoom} t={t} />}
+                    </div>
+
+                    {gameState === 'MENU' && (
+                        <div className="relative min-h-screen flex flex-col items-center justify-center p-4 gap-6" translate="no">
+                            {showLangModal && renderLanguageModal()}
+
+                            {/* Main Setup Card */}
+                            <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-md p-8 rounded-3xl border border-slate-700 shadow-2xl animate-fade-in mt-8">
+                                <div className="flex justify-end mb-2"><button onClick={() => setShowLangModal(true)} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-1 rounded-full transition"><Icon name="globe" size={16} /> {lang.toUpperCase()}</button></div>
+                                <div className="text-center space-y-2 mb-6"><h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 tracking-tight drop-shadow-sm">{t.title}</h1></div>
+                                <div className="space-y-6">
+                                    <input placeholder={t.fillName} value={myName} onChange={e => setMyName(e.target.value)} className="text-center text-lg bg-slate-800/80 font-bold w-full rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    <div className="space-y-3">
+                                        <Button onClick={createGame} disabled={!myName.trim() || connectingMode !== ''} className="py-4 text-lg">
+                                            {connectingMode === 'create' ? <Icon name="loader-2" className="animate-spin" /> : <Icon name="monitor-play" />} {connectingMode === 'create' ? t.creating : t.createRoom}
+                                        </Button>
+                                        <div className="relative py-2"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-700"></div></div><div className="relative flex justify-center text-xs font-bold uppercase tracking-widest px-3 bg-slate-900 text-slate-500">OR</div></div>
+                                        <div className="flex gap-2">
+                                            <input placeholder="Room ID" value={hostId} onChange={e => setHostId(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} className="font-mono text-center tracking-widest uppercase bg-slate-800/80 rounded-xl w-full p-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                            <Button onClick={joinGame} disabled={!myName.trim() || !hostId.trim() || connectingMode !== ''} variant="secondary" className="w-auto px-6 whitespace-nowrap">
+                                                {connectingMode === 'join' ? <span className="flex items-center gap-1"><Icon name="loader-2" className="animate-spin" size={20} /> {t.joining}</span> : t.join}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* About Game Card */}
+                            <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-slate-700 shadow-2xl animate-fade-in mb-4 text-slate-300">
+                                <h3 className="text-xl font-bold text-emerald-400 flex items-center gap-2 mb-4">
+                                    <Icon name="info" size={24}/> {t.about}
+                                </h3>
+                                <p className="text-sm leading-relaxed mb-4">
+                                    {t.aboutDesc}
+                                </p>
+
+                                <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-3 mb-6 text-sm text-blue-200">
+                                    <p className="flex items-start gap-2">
+                                        <Icon name="languages" size={18} className="mt-0.5 shrink-0 text-blue-400" />
+                                        <span className="leading-relaxed">{t.translationNotice}</span>
+                                    </p>
+                                </div>
+
+                                <h4 className="font-bold text-white mb-3">{t.howToPlay}</h4>
+                                <div className="bg-slate-800/50 rounded-xl p-4 space-y-2 text-sm mb-6 border border-slate-700">
+                                    <p>{t.step1}</p>
+                                    <p>{t.step2}</p>
+                                    <p>{t.step3}</p>
+                                    <p>{t.step4}</p>
+                                </div>
+
+                                <div className="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-4 text-sm">
+                                    <h4 className="font-bold text-emerald-400 flex items-center gap-2 mb-2">
+                                        <Icon name="video" size={18}/> {t.streamingTitle}
+                                    </h4>
+                                    <p className="text-emerald-200/80 leading-relaxed text-xs">
+                                        {t.streamingDesc}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <footer className="text-center text-slate-500 text-xs pb-8">
+                                © {new Date().getFullYear()} Anime Score Guesser. All rights reserved.
+                            </footer>
+                        </div>
+                    )}
+
+                    {gameState === 'LOBBY' && renderLobby()}
+
+                    {(gameState === 'PLAYING' || gameState === 'LOADING_ROUND') && (
+                        <div className="min-h-screen flex flex-col p-4 pt-20 md:p-6 md:pt-20 max-w-6xl mx-auto animate-fade-in pb-20 md:pb-6" key={animeData?.mal_id || 'loading'}>
+                            {gameState === 'LOADING_ROUND' || !animeData ? (
+                                <div className="flex-1 flex flex-col items-center justify-center space-y-8" translate="no">
+                                    <div className="relative"><div className="w-24 h-24 border-4 border-slate-800 border-t-indigo-500 rounded-full animate-spin"></div><div className="absolute inset-0 flex items-center justify-center font-black text-sm text-slate-300 uppercase tracking-widest">R {currentRound}</div></div>
+                                    <p className="text-xl font-bold animate-pulse text-indigo-400 tracking-widest uppercase">{t.loadingAnime}</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex justify-between items-center mb-6 bg-slate-800/90 p-4 rounded-2xl backdrop-blur-md border border-slate-700 shadow-xl z-10 sticky top-4" translate="no">
+                                        <div className="flex items-center gap-4"><div className="bg-gradient-to-br from-indigo-500 to-purple-600 w-12 h-12 rounded-xl flex items-center justify-center font-black text-2xl shadow-lg border border-indigo-400/30">{currentRound}</div><div className="text-sm text-slate-400 uppercase font-bold tracking-widest">{t.round} / {settings.rounds}</div></div>
+                                        <div className={`text-5xl font-black font-mono tabular-nums tracking-tighter drop-shadow-lg ${timeLeft <= 10 ? 'text-rose-500 animate-pulse' : 'text-emerald-400'}`}>{timeLeft}<span className="text-xl font-bold text-slate-500 ml-1">s</span></div>
+                                    </div>
+                                    <div className="flex-1 flex flex-col md:flex-row gap-8 items-stretch">
+                                        <div className="md:w-1/3 flex flex-col items-center justify-start gap-4">
+                                            <div className="relative group w-full max-w-[280px]">
+                                                <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur-lg opacity-40"></div>
+                                                <img src={animeData.images.jpg.large_image_url} alt="Anime Poster" className="relative rounded-2xl shadow-2xl w-full object-cover aspect-[2/3] transform transition duration-500 hover:scale-[1.02] border border-slate-700/50"/>
+                                            </div>
+                                        </div>
+                                        <div className="md:w-2/3 flex flex-col gap-6">
+                                            <AnimeInfoText animeData={animeData} t={t} />
+                                            <div className="bg-slate-900/90 p-6 md:p-8 rounded-3xl border border-slate-700 shadow-2xl mt-auto" translate="no">
+                                                {!isGuessSubmitted ? (
+                                                    <div className="space-y-8">
+                                                        <label className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Icon name="target" size={18} className="text-indigo-400" /> {t.guessScore}</label>
+                                                        <Slider value={myGuess} onChange={e => setMyGuess(e.target.value)} />
+                                                        <Button onClick={submitGuess} className="text-xl py-5 shadow-indigo-500/40">{t.submit}</Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-10 bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-600"><div className="mb-4 inline-block p-4 bg-green-500/20 rounded-full text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.2)]"><Icon name="check" size={48} /></div><p className="text-2xl font-black text-white mb-2 uppercase tracking-widest">{t.submit}!</p><p className="text-slate-400 animate-pulse font-bold">{t.waitingOthers}</p></div>
+                                                )}
+                                            </div>
+                                            <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-200" translate="no">
+                                                <p className="flex items-start gap-2">
+                                                    <Icon name="languages" size={16} className="mt-0.5 shrink-0 text-blue-400" />
+                                                    <span className="leading-relaxed">{t.translationNotice}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {gameState === 'ROUND_RESULT' && (
+                        <div className="min-h-screen flex flex-col items-center justify-center p-4 pt-20 md:p-8 bg-slate-900/30 animate-fade-in pb-24" key={`result-${animeData?.mal_id}`}>
+                            <div className="w-full max-w-3xl bg-slate-800/90 backdrop-blur-md rounded-3xl p-6 md:p-10 border border-slate-700 shadow-2xl">
+                                <h2 translate="no" className="text-3xl md:text-4xl font-black text-center mb-10 uppercase text-slate-400 border-b border-slate-700 pb-6">{t.reveal}</h2>
+                                {animeData && (
+                                    <div className="mb-12">
+                                        <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
+                                            <img src={animeData.images.jpg.image_url} alt="Poster" className="w-24 h-36 rounded-lg shadow-lg object-cover border border-slate-700" />
+                                            <div className="text-center md:text-left">
+                                                <AnimeResultTitle title={animeData.title} />
+                                                <div className="inline-block relative">
+                                                    <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-30 animate-pulse"></div>
+                                                    <ProtectedDisplay tag="div" className="relative text-7xl md:text-8xl font-black text-white drop-shadow-xl" text={revealedScore.toFixed(2)} />
+                                                    <div className="text-sm font-black text-indigo-400 uppercase tracking-widest mt-2 bg-slate-900/50 inline-block px-3 py-1 rounded-full" translate="no"><span>{t.actualScore}</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="relative w-full h-8 bg-slate-900 rounded-full mt-10 border border-slate-700 shadow-inner" translate="no">
+                                            <div className="absolute top-0 bottom-0 w-1 bg-white z-20 shadow-[0_0_10px_white]" style={{ left: `${(animeData.score / 10) * 100}%` }}><div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-black bg-white text-black px-2 py-1 rounded uppercase">Real</div></div>
+                                            {players.map((p) => {
+                                                if (p.currentGuess === null) return null;
+                                                const isMe = p.id === myId || (isHost && p.id === 'HOST');
+                                                return (
+                                                    <div key={p.id} className={`absolute top-1 bottom-1 w-3 rounded-full ${p.color?.bg || 'bg-slate-500'} ${isMe ? 'z-30 ring-2 ring-white scale-125' : 'z-10 opacity-80'} shadow-lg transform -translate-x-1/2 transition-transform hover:scale-150 cursor-help`} style={{ left: `${(p.currentGuess / 10) * 100}%` }} title={`${p.name}: ${p.currentGuess}`}>
+                                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-300 whitespace-nowrap">{p.name.charAt(0).toUpperCase()}</div>
+                                                        {isMe && <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] font-black text-white bg-indigo-600 px-1.5 py-0.5 rounded shadow-md">YOU</div>}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="space-y-4">
+                                    {[...players].sort((a, b) => b.score - a.score).map((p, idx) => {
+                                        const isMe = p.id === myId || (isHost && p.id === 'HOST');
+                                        return (
+                                            <div key={p.id} className={`flex items-center p-4 md:p-5 rounded-2xl transition-all duration-500 ${idx === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-slate-800 border border-yellow-500/50 scale-105 shadow-xl relative' : 'bg-slate-900 border border-slate-800'}`}>
+                                                <div className={`w-12 h-12 flex items-center justify-center font-black rounded-xl mr-5 text-xl ${idx === 0 ? 'bg-gradient-to-br from-yellow-300 to-yellow-600 text-black' : 'bg-gradient-to-br text-white ' + (p.color?.grad || 'from-slate-600 to-slate-700')}`}>{idx + 1}</div>
+                                                <div className="flex-1">
+                                                    <div className="font-black text-xl flex items-center gap-3"><span translate="no">{p.name}</span>{ isMe && <span className="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded uppercase" translate="no">YOU</span>}</div>
+                                                    <div className="text-xs md:text-sm font-bold text-slate-400 flex flex-wrap items-center gap-2 mt-2" translate="no">
+                                                        <span className="bg-slate-800 px-3 py-1 rounded-md border border-slate-700">Guess: <span className="text-white">{p.currentGuess?.toFixed(2)}</span></span>
+                                                        <span className={`px-3 py-1 rounded-md border ${parseFloat(p.lastDiff) < 1.0 ? 'bg-emerald-900/30 border-emerald-800 text-emerald-400' : 'bg-rose-900/30 border-rose-800 text-rose-400'}`}>Diff: {p.lastDiff}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right" translate="no">
+                                                    <div className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400">{p.score}</div>
+                                                    <div className={`text-sm md:text-base font-black mt-1 ${p.lastPoints >= 800 ? 'text-yellow-400' : 'text-emerald-400'}`}>+{p.lastPoints} <span translate="ja">{t.points}</span></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {isHost && (<div className="mt-12 pt-8 border-t border-slate-700" translate="no"><Button onClick={() => { if (currentRound >= settings.rounds) { setGameState('GAME_OVER'); fireConfetti(); broadcastState({ gameState: 'GAME_OVER' }); } else { setCurrentRound(prev => prev + 1); startRound(); } }} className="text-xl py-5 shadow-xl">{currentRound >= settings.rounds ? t.finalResult : t.nextRound} <Icon name="arrow-right" className="ml-2" /></Button></div>)}
+                            </div>
+                        </div>
+                    )}
+
+                    {gameState === 'GAME_OVER' && (
+                        <div className="min-h-screen flex flex-col items-center justify-center p-4 pt-20 bg-slate-900/30 animate-fade-in pb-24" translate="no">
+                            <div className="w-full max-w-3xl bg-slate-800/90 backdrop-blur-md rounded-3xl p-6 md:p-10 border border-slate-700 shadow-2xl text-center">
+                                <h2 className="text-3xl md:text-4xl font-black mb-10 uppercase text-yellow-400 border-b border-slate-700 pb-6">{t.finalResult}</h2>
+                                <div className="space-y-4 mb-10">
+                                    {[...players].sort((a, b) => b.score - a.score).map((p, idx) => {
+                                        const isMe = p.id === myId || (isHost && p.id === 'HOST');
+                                        return (
+                                            <div key={p.id} className={`flex items-center p-4 rounded-2xl ${idx === 0 ? 'bg-yellow-500/20 border border-yellow-500/50 shadow-xl' : 'bg-slate-900 border border-slate-800'}`}>
+                                                <div className={`w-12 h-12 flex items-center justify-center font-black rounded-xl mr-5 text-xl ${idx === 0 ? 'bg-yellow-400 text-black' : 'bg-slate-800 text-slate-500'}`}>{idx + 1}</div>
+                                                <div className="flex-1 font-black text-xl text-left flex items-center gap-3">
+                                                    <span translate="no">{p.name}</span>
+                                                    {isMe && <span className="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded uppercase" translate="no">YOU</span>}
+                                                    {idx === 0 && <Icon name="crown" className="text-yellow-400 ml-2" size={24} />}
+                                                </div>
+                                                <div className="text-3xl font-black" translate="no">{p.score}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {isHost && <Button onClick={returnToLobby} className="text-xl py-5">{t.backToLobby}</Button>}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
