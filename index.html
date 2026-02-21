@@ -3,10 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5871148617904389" crossorigin="anonymous"></script>
-
     <title>Anime Score Guesser</title>
 
     <!-- React & ReactDOM -->
@@ -538,7 +534,16 @@
             };
 
             const initPeer = (id = null, onOpenCallback = null) => {
-                const peer = new Peer(id);
+                // スマホ回線(NAT)同士でも繋がりやすくするため、Googleの無料STUNサーバーを追加
+                const peer = new Peer(id, {
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' }
+                        ]
+                    }
+                });
                 peerRef.current = peer;
                 peer.on('open', (id) => { setMyId(id); if (onOpenCallback) onOpenCallback(id); });
                 peer.on('connection', (conn) => {
@@ -556,22 +561,46 @@
                         setPlayers(newPlayers); broadcastState({ players: newPlayers });
                     });
                 });
+
+                // スマホで裏画面に行った際などの切断に対する自動再接続
+                peer.on('disconnected', () => {
+                    console.log("Peer disconnected. Trying to reconnect...");
+                    if (peerRef.current && !peerRef.current.destroyed) {
+                        peerRef.current.reconnect();
+                    }
+                });
+
                 peer.on('error', (err) => {
+                    console.warn("PeerJS Error:", err);
                     setTimeout(() => {
                         setConnectingMode('');
+
+                        // ネットワーク系のエラーや一時的な切断ではタイトルに戻さない
+                        if (err && ['network', 'webrtc', 'socket-error', 'socket-closed', 'disconnected'].includes(err.type)) {
+                            const currentLang = stateRef.current.lang;
+                            showInfo(currentLang === 'ja' ? "通信が不安定です。自動で再接続します..." : "Connection unstable. Reconnecting...");
+                            if (peerRef.current && !peerRef.current.destroyed) {
+                                peerRef.current.reconnect();
+                            }
+                            return; // 退出処理をスキップ
+                        }
+
                         let errMsg = t.connectionError;
                         if (err && err.type === 'peer-unavailable') errMsg = (lang === 'ja' ? "ルームが見つかりません。" : "Room not found.");
-                        showError(errMsg); leaveRoom();
+                        showError(errMsg);
+                        leaveRoom();
                     }, 0);
                 });
             };
 
             const joinGame = () => {
                 if (!myName.trim()) { showError(t.fillName); return; }
-                if (!hostId.trim()) return;
+                const targetHostId = hostId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                if (!targetHostId) return;
                 setConnectingMode('join');
                 initPeer(null, (id) => {
-                    const conn = peerRef.current.connect(hostId.trim().toUpperCase());
+                    // 通信を安定させるため reliable オプションを追加
+                    const conn = peerRef.current.connect(targetHostId, { reliable: true });
                     hostConnRef.current = conn;
                     conn.on('open', () => {
                         conn.send({ type: 'JOIN', payload: { name: myName } });
@@ -749,7 +778,7 @@
                                         </Button>
                                         <div className="relative py-2"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-700"></div></div><div className="relative flex justify-center text-xs font-bold uppercase tracking-widest px-3 bg-slate-900 text-slate-500">OR</div></div>
                                         <div className="flex gap-2">
-                                            <input placeholder="Room ID" value={hostId} onChange={e => setHostId(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} className="font-mono text-center tracking-widest uppercase bg-slate-800/80 rounded-xl w-full p-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                            <input placeholder="Room ID" value={hostId} onChange={e => setHostId(e.target.value)} onBlur={() => setHostId(hostId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())} className="font-mono text-center tracking-widest uppercase bg-slate-800/80 rounded-xl w-full p-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                                             <Button onClick={joinGame} disabled={!myName.trim() || !hostId.trim() || connectingMode !== ''} variant="secondary" className="w-auto px-6 whitespace-nowrap">
                                                 {connectingMode === 'join' ? <span className="flex items-center gap-1"><Icon name="loader-2" className="animate-spin" size={20} /> {t.joining}</span> : t.join}
                                             </Button>
