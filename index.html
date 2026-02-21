@@ -651,8 +651,6 @@
                 if (!anime) { showError("アニメデータの取得に失敗しました。"); setGameState('LOBBY'); broadcastState({ gameState: 'LOBBY' }); return; }
                 setAnimeData(anime); setGameState('PLAYING'); setTimeLeft(settings.timeLimit);
                 broadcastState({ gameState: 'PLAYING', animeData: anime, timeLeft: settings.timeLimit });
-                if (timerRef.current) clearInterval(timerRef.current);
-                timerRef.current = setInterval(() => { setTimeLeft(prev => { if (prev <= 1) { clearInterval(timerRef.current); return 0; } return prev - 1; }); }, 1000);
             };
 
             const submitGuess = () => {
@@ -662,10 +660,32 @@
             };
 
             // -- Effects --
+
+            // タイマーはホスト・参加者両方でローカルで回す
+            useEffect(() => {
+                if (gameState === 'PLAYING') {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                    timerRef.current = setInterval(() => {
+                        setTimeLeft(prev => {
+                            if (prev <= 1) {
+                                clearInterval(timerRef.current);
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                } else {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                }
+                return () => {
+                    if (timerRef.current) clearInterval(timerRef.current);
+                };
+            }, [gameState]);
+
+
             useEffect(() => {
                 if (!isHost || gameState !== 'PLAYING') return;
                 if (timeLeft === 0 || (players.length > 0 && players.every(p => p.currentGuess !== null))) {
-                    if (timerRef.current) clearInterval(timerRef.current);
                     const calculatedPlayers = players.map(p => {
                         const diff = Math.abs(animeData.score - (p.currentGuess || 0));
                         let roundPoints = Math.max(0, Math.round(1000 * Math.exp(-2.302 * diff)));
