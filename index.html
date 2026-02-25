@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anime Score Guesser</title>
-
+    
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
+    
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <!-- PeerJS -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -26,7 +26,7 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
-
+        
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: #0f172a;
@@ -34,88 +34,43 @@
             overflow-x: hidden;
         }
 
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-
-        @keyframes slideBg {
-            0% {
-                transform: translateX(0);
-            }
-
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-
-        .bg-scroll {
-            animation: slideBg 60s linear infinite;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes slideBg { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .bg-scroll { animation: slideBg 60s linear infinite; }
 
         @keyframes pop {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
-
-        .animate-pop {
-            animation: pop 0.3s ease-out;
-        }
+        .animate-pop { animation: pop 0.3s ease-out; }
 
         input[type=range] {
-            -webkit-appearance: none;
-            background: transparent;
+            -webkit-appearance: none; 
+            background: transparent; 
         }
-
-            input[type=range]::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                height: 28px;
-                width: 28px;
-                border-radius: 50%;
-                background: #fff;
-                cursor: pointer;
-                margin-top: -12px;
-                box-shadow: 0 0 15px rgba(99, 102, 241, 0.8);
-                border: 3px solid #6366f1;
-                transition: transform 0.1s;
-            }
-
-            input[type=range]::-webkit-slider-runnable-track {
-                width: 100%;
-                height: 6px;
-                cursor: pointer;
-                background: #334155;
-                border-radius: 3px;
-            }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 28px; width: 28px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            margin-top: -12px;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.8);
+            border: 3px solid #6366f1;
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -174,7 +129,9 @@
                 step3: "3. 予想する: アニメの情報を見て、スコア(0.00〜10.00)を予想します。",
                 step4: "4. 結果発表: 正解に近いほど高得点！",
                 streamingTitle: "実況・配信・動画投稿について",
-                streamingDesc: "個人・法人を問わず、実況配信や動画投稿を自由に行っていただけます。事前連絡は不要です。収益化も問題ありません。ぜひ皆さんで楽しんでください！"
+                streamingDesc: "個人・法人を問わず、実況配信や動画投稿を自由に行っていただけます。事前連絡は不要です。収益化も問題ありません。ぜひ皆さんで楽しんでください！",
+                kickedMessage: "ホストからキックされました。",
+                kick: "キック",
             },
             en: {
                 title: "Anime Score Guesser",
@@ -225,7 +182,9 @@
                 step3: "3. Guess: Look at the anime info and guess the score (0.00-10.00).",
                 step4: "4. Reveal: Closer guesses get higher points!",
                 streamingTitle: "About Streaming & Video Posting",
-                streamingDesc: "Feel free to stream or post videos of this game, regardless of whether you are an individual or a corporation. No prior contact is required, and monetization is perfectly fine. Have fun!"
+                streamingDesc: "Feel free to stream or post videos of this game, regardless of whether you are an individual or a corporation. No prior contact is required, and monetization is perfectly fine. Have fun!",
+                kickedMessage: "You have been kicked by the host.",
+                kick: "Kick",
             }
         };
 
@@ -255,6 +214,19 @@
         const getRandomColor = () => PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
         const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+
+        // URL Mapping logic
+        const getHashForState = (state) => {
+            switch (state) {
+                case 'MENU': return '#title';
+                case 'LOBBY': return '#lobby';
+                case 'PLAYING': 
+                case 'LOADING_ROUND': return '#battle';
+                case 'ROUND_RESULT': 
+                case 'GAME_OVER': return '#result';
+                default: return '#title';
+            }
+        };
 
         // --- Helper Components ---
         const Icon = ({ name, size = 24, className = "" }) => {
@@ -350,34 +322,34 @@
                     <TranslatedBlock tag="h2" className="text-3xl md:text-5xl font-black leading-tight text-white drop-shadow-md" text={animeData.title} />
                     {animeData.title_japanese && <h3 className="text-xl text-slate-400 font-bold" translate="no"><span>{animeData.title_japanese}</span></h3>}
                 </div>
-
+                
                 {/* 拡張されたヒント情報バッジ */}
                 <div className="flex flex-wrap gap-2" translate="no">
                     {animeData.type && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-indigo-300"><Icon name="tv" size={16}/> {animeData.type}</span>}
-
+                    
                     {animeData.aired?.prop?.from?.year && (
                         <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-emerald-300 capitalize">
-                            <Icon name="calendar" size={16}/>
+                            <Icon name="calendar" size={16}/> 
                             {animeData.season ? `${animeData.season} ` : ''}{animeData.aired.prop.from.year}
                         </span>
                     )}
-
+                    
                     {animeData.episodes && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-amber-300"><Icon name="hash" size={16}/> {animeData.episodes} {t.episodes}</span>}
-
+                    
                     {animeData.studios?.[0] && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-pink-300"><Icon name="film" size={16}/> {animeData.studios[0].name}</span>}
-
+                    
                     {animeData.source && animeData.source !== "Unknown" && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-cyan-300 capitalize"><Icon name="book-open" size={16}/> {animeData.source.replace(/_/g, ' ')}</span>}
-
+                    
                     {animeData.rating && animeData.rating !== "None" && <span className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 shadow-sm text-rose-300" title={animeData.rating}><Icon name="shield" size={16}/> {animeData.rating.split(' - ')[0]}</span>}
                 </div>
 
                 {/* ジャンルだけでなく、テーマとターゲット層もまとめてタグ表示 */}
                 <div className="flex flex-wrap gap-1.5">
-                    {[...(animeData.genres || []), ...(animeData.themes || []), ...(animeData.demographics || [])].map((g, idx) =>
+                    {[...(animeData.genres || []), ...(animeData.themes || []), ...(animeData.demographics || [])].map((g, idx) => 
                         <TranslatedBlock key={`${g.mal_id}-${idx}`} tag="span" className="bg-slate-700/50 text-slate-300 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider" text={g.name} />
                     )}
                 </div>
-
+                
                 <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700/50 shadow-inner overflow-y-auto max-h-48 md:max-h-[none]">
                     <h4 translate="no" className="text-slate-400 font-black mb-3 flex items-center gap-2 uppercase tracking-widest text-xs border-b border-slate-700 pb-2"><Icon name="align-left" size={16}/> {t.synopsis}</h4>
                     <TranslatedBlock tag="p" className="text-slate-200 leading-relaxed text-sm md:text-base" text={animeData.synopsis || "No synopsis available."} />
@@ -394,19 +366,19 @@
             // -- State Definitions --
             const [lang, setLang] = useState('ja');
             const [showLangModal, setShowLangModal] = useState(false);
-            const [gameState, setGameState] = useState('MENU');
+            const [gameState, setGameState] = useState('MENU'); 
             const [myId, setMyId] = useState('');
             const [hostId, setHostId] = useState('');
             const [isHost, setIsHost] = useState(false);
             const [myName, setMyName] = useState('');
-            const [players, setPlayers] = useState([]);
+            const [players, setPlayers] = useState([]); 
             const [settings, setSettings] = useState({ rounds: 5, timeLimit: 30 });
             const [currentRound, setCurrentRound] = useState(1);
             const [animeData, setAnimeData] = useState(null);
             const [timeLeft, setTimeLeft] = useState(0);
-            const [myGuess, setMyGuess] = useState(5.00);
+            const [myGuess, setMyGuess] = useState(5.00); 
             const [isGuessSubmitted, setIsGuessSubmitted] = useState(false);
-            const [revealedScore, setRevealedScore] = useState(0);
+            const [revealedScore, setRevealedScore] = useState(0); 
             const [isCopied, setIsCopied] = useState(false);
             const [connectingMode, setConnectingMode] = useState('');
             const [errorMessage, setErrorMessage] = useState('');
@@ -420,6 +392,7 @@
             const connectionTimeoutRef = useRef(null);
             const confettiRef = useRef(null);
             const stateRef = useRef({ isHost, gameState, players, settings, currentRound, animeData, timeLeft, lang });
+            const leaveRoomRef = useRef(null);
 
             const t = TEXTS[lang];
 
@@ -467,10 +440,10 @@
                 stopConfetti();
                 if (window.confetti) {
                     const duration = 3000; const end = Date.now() + duration;
-                    const frame = () => {
-                        window.confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-                        window.confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-                        if (Date.now() < end) confettiRef.current = requestAnimationFrame(frame);
+                    const frame = () => { 
+                        window.confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } }); 
+                        window.confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } }); 
+                        if (Date.now() < end) confettiRef.current = requestAnimationFrame(frame); 
                         else confettiRef.current = null;
                     };
                     frame();
@@ -485,6 +458,34 @@
                 setRevealedScore(0);
                 setTimeout(cleanupConnection, 50);
             };
+            leaveRoomRef.current = leaveRoom;
+
+            // --- Hash Management Effects ---
+            useEffect(() => {
+                const targetHash = getHashForState(gameState);
+                if (window.location.hash !== targetHash) {
+                    window.location.hash = targetHash;
+                }
+            }, [gameState]);
+
+            useEffect(() => {
+                const handleHashChange = () => {
+                    const expectedHash = getHashForState(stateRef.current.gameState);
+                    if (window.location.hash !== expectedHash) {
+                        // ブラウザの戻る/進むボタン等でURLが強制変更された場合、
+                        // 接続状態との不整合を防ぐために退出してタイトル画面へ戻す
+                        if (stateRef.current.gameState !== 'MENU') {
+                            if (leaveRoomRef.current) leaveRoomRef.current();
+                        }
+                    }
+                };
+                window.addEventListener('hashchange', handleHashChange);
+                // ページロード時、ハッシュが #title 以外ならリセットする（途中参加・復帰のバグ防止）
+                if (window.location.hash && window.location.hash !== '#title') {
+                    window.history.replaceState(null, '', window.location.pathname + window.location.search + '#title');
+                }
+                return () => window.removeEventListener('hashchange', handleHashChange);
+            }, []);
 
             const returnToLobby = () => {
                 stopConfetti();
@@ -519,17 +520,23 @@
             };
 
             const handleDataFromHost = (data) => {
+                if (data.type === 'KICKED') {
+                    const currentLang = stateRef.current.lang;
+                    showError(TEXTS[currentLang].kickedMessage);
+                    if (leaveRoomRef.current) leaveRoomRef.current();
+                    return;
+                }
                 if (data.type === 'UPDATE_STATE') {
                     const s = data.payload;
                     const cur = stateRef.current;
-                    if (s.gameState === 'LOADING_ROUND' && cur.gameState !== 'LOADING_ROUND') {
+                    if (s.gameState === 'LOADING_ROUND' && cur.gameState !== 'LOADING_ROUND') { 
                         setIsGuessSubmitted(false); setMyGuess(5.00); setRevealedScore(0);
                     }
                     if (s.gameState) setGameState(s.gameState); if (s.players) setPlayers(s.players); if (s.settings) setSettings(s.settings);
                     if (s.currentRound) setCurrentRound(s.currentRound); if (s.animeData !== undefined) setAnimeData(s.animeData);
                     if (s.timeLeft !== undefined) setTimeLeft(s.timeLeft);
                     if (s.gameState === 'GAME_OVER') fireConfetti();
-                    if (s.gameState === 'LOBBY') stopConfetti();
+                    if (s.gameState === 'LOBBY') stopConfetti(); 
                 } else if (data.type === 'INFO') { showInfo(data.payload.message); }
             };
 
@@ -561,7 +568,7 @@
                         setPlayers(newPlayers); broadcastState({ players: newPlayers });
                     });
                 });
-
+                
                 // スマホで裏画面に行った際などの切断に対する自動再接続
                 peer.on('disconnected', () => {
                     console.log("Peer disconnected. Trying to reconnect...");
@@ -574,7 +581,7 @@
                     console.warn("PeerJS Error:", err);
                     setTimeout(() => {
                         setConnectingMode('');
-
+                        
                         // ネットワーク系のエラーや一時的な切断ではタイトルに戻さない
                         if (err && ['network', 'webrtc', 'socket-error', 'socket-closed', 'disconnected'].includes(err.type)) {
                             const currentLang = stateRef.current.lang;
@@ -587,8 +594,8 @@
 
                         let errMsg = t.connectionError;
                         if (err && err.type === 'peer-unavailable') errMsg = (lang === 'ja' ? "ルームが見つかりません。" : "Room not found.");
-                        showError(errMsg);
-                        leaveRoom();
+                        showError(errMsg); 
+                        if (leaveRoomRef.current) leaveRoomRef.current();
                     }, 0);
                 });
             };
@@ -611,7 +618,7 @@
                         setGameState(prev => { if (prev !== 'LOBBY') { setConnectingMode(''); return 'LOBBY'; } return prev; });
                         handleDataFromHost(data);
                     });
-                    conn.on('close', () => { setTimeout(() => { showError(TEXTS[stateRef.current.lang].hostLeft); leaveRoom(); }, 0); });
+                    conn.on('close', () => { setTimeout(() => { showError(TEXTS[stateRef.current.lang].hostLeft); if (leaveRoomRef.current) leaveRoomRef.current(); }, 0); });
                 });
             };
 
@@ -623,6 +630,23 @@
                     setConnectingMode(''); setIsHost(true); setGameState('LOBBY');
                     setPlayers([{ id: 'HOST', name: myName, score: 0, currentGuess: null, color: getRandomColor() }]);
                 });
+            };
+
+            const kickPlayer = (playerId) => {
+                if (!isHost) return;
+                const conn = connsRef.current[playerId];
+                if (conn && conn.open) {
+                    conn.send({ type: 'KICKED' });
+                    setTimeout(() => {
+                        try { conn.close(); } catch(err) { console.warn(err); }
+                    }, 200);
+                } else {
+                    // 通信がすでに切れているなどの場合は強制的にリストから削除
+                    const newPlayers = players.filter(p => p.id !== playerId);
+                    setPlayers(newPlayers);
+                    broadcastState({ players: newPlayers });
+                    delete connsRef.current[playerId];
+                }
             };
 
             // -- Game Actions --
@@ -685,7 +709,7 @@
 
             useEffect(() => {
                 if (!isHost || gameState !== 'PLAYING') return;
-                if (timeLeft === 0 || (players.length > 0 && players.every(p => p.currentGuess !== null))) {
+                if (timeLeft === 0 || (players.length > 0 && players.every(p => p.currentGuess !== null))) { 
                     const calculatedPlayers = players.map(p => {
                         const diff = Math.abs(animeData.score - (p.currentGuess || 0));
                         let roundPoints = Math.max(0, Math.round(1000 * Math.exp(-2.302 * diff)));
@@ -744,6 +768,13 @@
                                     <div key={p.id} className={`flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border-2 transform transition hover:scale-[1.02] ${p.id === 'HOST' || (p.id === myId || (isHost && p.id === 'HOST')) ? 'border-indigo-500' : 'border-slate-700/50'}`}>
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xl bg-gradient-to-br text-white ${p.color?.grad || 'from-slate-400 to-slate-600'}`}>{p.name.charAt(0).toUpperCase()}</div>
                                         <div className="flex-1"><div className="font-bold text-lg">{p.name}</div><div className="text-xs font-bold text-slate-400 flex items-center gap-2 mt-1">{p.id === 'HOST' && <span className="text-yellow-400 uppercase">{t.host}</span>}{ (p.id === myId || (isHost && p.id === 'HOST')) && <span className="bg-indigo-600 text-white px-2 py-0.5 rounded uppercase tracking-widest animate-pulse">{t.you}</span>}</div></div>
+                                        
+                                        {/* キックボタン (ホストのみ表示) */}
+                                        {isHost && p.id !== 'HOST' && (
+                                            <button onClick={() => kickPlayer(p.id)} className="text-slate-500 hover:text-rose-500 transition-colors p-2 rounded-lg hover:bg-rose-500/10" title={t.kick} translate="no">
+                                                <Icon name="user-x" size={20} />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -775,7 +806,7 @@
             return (
                 <div className="min-h-screen font-sans selection:bg-indigo-500/30 relative">
                     <AnimatedBackground />
-
+                    
                     <div translate="no">
                         {errorMessage && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm bg-rose-600/95 backdrop-blur-md border border-rose-400 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-fade-in cursor-pointer" onClick={() => setErrorMessage('')}><Icon name="alert-triangle" size={20} /><span className="font-bold text-sm leading-tight flex-1">{errorMessage}</span></div>}
                         {infoMessage && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[190] w-[90%] max-w-sm bg-slate-800/95 backdrop-blur-md border border-slate-600 text-slate-200 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-fade-in cursor-pointer" onClick={() => setInfoMessage('')}><Icon name="info" size={20} /><span className="font-bold text-sm leading-tight flex-1">{infoMessage}</span></div>}
@@ -785,7 +816,7 @@
                     {gameState === 'MENU' && (
                         <div className="relative min-h-screen flex flex-col items-center justify-center p-4 gap-6" translate="no">
                             {showLangModal && renderLanguageModal()}
-
+                            
                             {/* Main Setup Card */}
                             <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-md p-8 rounded-3xl border border-slate-700 shadow-2xl animate-fade-in mt-8">
                                 <div className="flex justify-end mb-2"><button onClick={() => setShowLangModal(true)} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-1 rounded-full transition"><Icon name="globe" size={16} /> {lang.toUpperCase()}</button></div>
@@ -806,7 +837,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                            
                             {/* About Game Card */}
                             <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-slate-700 shadow-2xl animate-fade-in mb-4 text-slate-300">
                                 <h3 className="text-xl font-bold text-emerald-400 flex items-center gap-2 mb-4">
@@ -815,14 +846,14 @@
                                 <p className="text-sm leading-relaxed mb-4">
                                     {t.aboutDesc}
                                 </p>
-
+                                
                                 <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-3 mb-6 text-sm text-blue-200">
                                     <p className="flex items-start gap-2">
                                         <Icon name="languages" size={18} className="mt-0.5 shrink-0 text-blue-400" />
                                         <span className="leading-relaxed">{t.translationNotice}</span>
                                     </p>
                                 </div>
-
+                                
                                 <h4 className="font-bold text-white mb-3">{t.howToPlay}</h4>
                                 <div className="bg-slate-800/50 rounded-xl p-4 space-y-2 text-sm mb-6 border border-slate-700">
                                     <p>{t.step1}</p>
@@ -840,7 +871,7 @@
                                     </p>
                                 </div>
                             </div>
-
+                            
                             <footer className="text-center text-slate-500 text-xs pb-8">
                                 © {new Date().getFullYear()} Anime Score Guesser. All rights reserved.
                             </footer>
