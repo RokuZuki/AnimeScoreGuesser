@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>このサイトについて - Anime Score Guesser</title>
+    <meta name="description" content="Anime Score Guesserの利用規約、プライバシーポリシー、FAQ、お問い合わせ情報を掲載しています。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen py-12 px-4 italic-none">
+    <div class="max-w-4xl mx-auto space-y-12">
+        <header class="text-center">
+            <a href="/" class="text-indigo-400 hover:text-indigo-300 font-black text-2xl tracking-tighter">
+                ANIME SCORE GUESSER
+            </a>
+            <h1 class="text-4xl font-black mt-4">このサイトについて</h1>
+            <p class="text-slate-400 mt-2 text-lg">About, Terms, Privacy, and FAQ</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-4 border-b border-slate-800 pb-8">
+            <a href="#how-to-play" class="text-indigo-400 hover:underline">遊び方</a>
+            <a href="#features" class="text-indigo-400 hover:underline">特徴</a>
+            <a href="#faq" class="text-indigo-400 hover:underline">FAQ</a>
+            <a href="#terms" class="text-indigo-400 hover:underline">利用規約</a>
+            <a href="#privacy" class="text-indigo-400 hover:underline">プライバシーポリシー</a>
+            <a href="#contact" class="text-indigo-400 hover:underline">お問い合わせ</a>
+        </nav>
+
+        <section id="how-to-play" class="space-y-4">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-500 pl-4">Anime Score Guesserの遊び方</h2>
+            <div
+                class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 leading-relaxed space-y-4 text-slate-300">
+                <p>Anime Score
+                    Guesserは、ランダムに表示されるアニメのタイトルやあらすじから、世界最大級のアニメデータベース「MyAnimeList」でのユーザースコア（0.00〜10.00）を予想して当てるゲームです。
+                </p>
+                <ul class="list-decimal pl-6 space-y-2">
+                    <li><strong>部屋を作成または参加:</strong> ホストが部屋を作成し、発行されたルームIDを友達に共有します。</li>
+                    <li><strong>アニメ情報の確認:</strong> 画面に表示されるタイトル、画像、あらすじ、ジャンル、放送時期などの情報を読み解きます。</li>
+                    <li><strong>スコア予想:</strong> スライダーを動かして「これだ！」と思うスコアを決定します。</li>
+                    <li><strong>結果発表:</strong> 実際のスコアとの差が小さいほど、高いポイントを獲得できます。</li>
+                </ul>
+                <p>すべてのラウンドが終了した時点で、最も合計ポイントが高いプレイヤーが優勝です！</p>
+            </div>
+        </section>
+
+        <section id="features" class="space-y-4">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-500 pl-4">ゲームの特徴</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+                    <h3 class="font-bold text-indigo-300 mb-2">完全無料・登録不要</h3>
+                    <p class="text-slate-400 text-sm">メールアドレスの登録などは一切不要。ブラウザを開くだけですぐに遊べます。</p>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+                    <h3 class="font-bold text-indigo-300 mb-2">リアルタイム対戦</h3>
+                    <p class="text-slate-400 text-sm">PeerJSによるP2P通信を採用。遅延を抑えたリアルタイムな体験を提供します。</p>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+                    <h3 class="font-bold text-indigo-300 mb-2">最新のデータ</h3>
+                    <p class="text-slate-400 text-sm">Jikan APIを通じてMyAnimeListの最新スコアを取得しています。常に新鮮な問題が楽しめます。</p>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+                    <h3 class="font-bold text-indigo-300 mb-2">配信者・動画投稿者歓迎</h3>
+                    <p class="text-slate-400 text-sm">実況プレイ、生放送での視聴者参加型企画、VTuberの企画など、ご自由にお使いいただけます。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq" class="space-y-4">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-500 pl-4">よくある質問 (FAQ)</h2>
+            <div class="space-y-4">
+                <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
+                    <p class="font-bold text-indigo-300 mb-2">Q. アニメのデータが英語なのはなぜですか？</p>
+                    <p class="text-slate-300">A.
+                        使用しているAPI（MyAnimeListベース）の情報の多くが英語で管理されているためです。ブラウザの翻訳機能を利用すると、あらすじなどを日本語で楽しむことができます。</p>
+                </div>
+                <div class="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
+                    <p class="font-bold text-indigo-300 mb-2">Q. スコアの更新タイミングはいつですか？</p>
+                    <p class="text-slate-300">A. ゲーム開始時にリアルタイムで取得されていますが、MyAnimeList側のキャッシュ状況により数時間のタイムラグがある場合があります。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="terms" class="space-y-4">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-500 pl-4">利用規約</h2>
+            <div
+                class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
+                1. 免責事項
+                当サイトの利用によりユーザーに生じた損害について、運営者は一切の責任を負いません。通信の不具合やAPIの制限によるゲームの中断についても同様とします。
+
+                2. 著作権
+                ゲーム内に表示されるアニメの画像・タイトル・あらすじ等の権利は各権利者に帰属します。当サイトはAPIを通じて適法に公開されているデータを参照しているのみです。
+
+                3. 禁止事項
+                ・サーバーやAPI（Jikan API等）への過度な負荷をかける行為（BOT等の使用）
+                ・不正アクセスやゲームの進行を意図的に妨害する行為
+                ・その他、公序良俗に反する行為
+
+                4. 規約の変更
+                本規約は予告なく変更される場合があります。</div>
+        </section>
+
+        <section id="privacy" class="space-y-4">
+            <h2 class="text-2xl font-bold border-l-4 border-indigo-500 pl-4">プライバシーポリシー</h2>
+            <div
+                class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
+                1. 個人情報の取得
+                当サイトは、ユーザーの氏名、住所、メールアドレス等の個人情報を直接収集することはありません。
+
+                2. 通信方式について
+                当サイトのマルチプレイはPeerJSを用いたP2P（Peer-to-Peer）通信で行われます。入力した名前や予想スコアは接続中のプレイヤー間でのみ共有され、当サイトのサーバーには保存されません。
+
+                3. 広告およびCookieについて
+                当サイトでは、第三者配信の広告サービス（Google
+                AdSense等）を利用して広告を配信する場合があります。これらの広告配信事業者は、ユーザーの興味に応じた商品やサービスの広告を表示するため、当サイトや他サイトへのアクセスに関する情報「Cookie」(氏名、住所、メールアドレス、電話番号は含まれません)を使用することがあります。
+                Google AdSenseに関して、このプロセスの詳細やこのような情報が広告配信事業者に使用されないようにする方法については、Googleのポリシーと規約をご確認ください。
+
+                4. 免責事項
+                当サイトからリンクやバナーなどによって他のサイトに移動された場合、移動先サイトで提供される情報、サービス等について一切の責任を負いません。</div>
+        </section>
+
+        <section id="contact" class="space-y-4 text-center">
+            <h2 class="text-2xl font-bold">お問い合わせ</h2>
+            <p class="text-slate-400 pb-4">ご意見・ご要望・バグ報告は下記メールアドレスまで</p>
+            <div class="bg-indigo-600/20 p-6 rounded-2xl border border-indigo-500/30">
+                <a href="mailto:animescoreguesser@gmail.com" class="text-indigo-400 font-black text-xl hover:underline">
+                    animescoreguesser@gmail.com
+                </a>
+            </div>
+        </section>
+
+        <footer class="text-center pt-12 border-t border-slate-800 text-slate-500 text-sm">
+            <p>&copy; 2024 Anime Score Guesser. All rights reserved.</p>
+            <p class="mt-2 text-indigo-500"><a href="/">ゲームに戻る</a></p>
+        </footer>
+    </div>
+</body>
+
+</html>
